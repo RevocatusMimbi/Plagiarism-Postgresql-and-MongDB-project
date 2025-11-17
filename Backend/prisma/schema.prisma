@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Make sure your database URL is set in your .env file
+  url      = env("DATABASE_URL")
+}git 
+
+// --- CORE TABLES ---
+
+model Admin {
+  uid      Int    @id @default(autoincrement())
+  name     String @db.VarChar(40)
+  email    String @db.VarChar(30)
+  password String @db.VarChar(255)
+  image    String @db.VarChar(100)
+  level    Int    @db.Integer
+
+  @@map("admin")
+}
+
+model Facult {
+  facId   Int      @id @default(autoincrement()) @map("facId")
+  facName String   @db.VarChar(40) @map("facName")
+  Courses Course[]
+  Students Student[]
+  Lectures Lecture[]
+
+  @@map("facult")
+}
+
+model Lecture {
+  lid      Int     @id @default(autoincrement())
+  fname    String  @db.VarChar(30)
+  lname    String  @db.VarChar(30)
+  email    String  @db.VarChar(50)
+  password String  @db.VarChar(200)
+  status   Int     @db.Integer
+  level    Int     @db.Integer
+  image    String  @db.VarChar(100)
+  cId      Int?    @map("cId")
+  Courses  Course[]
+  Facult   Facult? @relation(fields: [cId], references: [facId])
+
+  @@map("lecture")
+}
+
+model Student {
+  regNo      String     @id @db.VarChar(30) @map("regNo")
+  fname      String     @db.VarChar(30)
+  lname      String     @db.VarChar(30)
+  password   String     @db.VarChar(200)
+  image      String     @db.VarChar(100)
+  status     Int        @db.Integer
+  level      Int        @db.Integer
+  fid        Int?       @map("fid")
+  Facult     Facult?    @relation(fields: [fid], references: [facId])
+  Documents  Document[]
+  Takes      Take[]
+
+  @@map("students")
+}
+
+// --- RELATIONAL TABLES ---
+
+model Assignment {
+  aid       Int        @id @default(autoincrement())
+  name      String     @db.VarChar(30)
+  date      DateTime   @db.Timestamp(0) // Time without time zone
+  submition DateTime   @db.Date // Date only
+  CName     String     @db.VarChar(30) @map("CName")
+  Documents Document[]
+
+  @@map("assignments")
+}
+
+model Comment {
+  comId Int    @id @default(autoincrement()) @map("comId")
+  lower Int    @db.Integer
+  upper Int    @db.Integer
+  comm  String @db.VarChar(200)
+
+  @@map("comment")
+}
+
+model Course {
+  cid         Int       @id @default(autoincrement())
+  ccode       String    @db.VarChar(10)
+  courseName  String    @db.VarChar(40) @map("courseName")
+  yos         String    @db.VarChar(15)
+  facultyId   Int       @map("facultyId")
+  lecID       Int?      @map("lecID")
+  Facult      Facult    @relation(fields: [facultyId], references: [facId])
+  Lecture     Lecture?  @relation(fields: [lecID], references: [lid])
+  Takes       Take[]
+
+  @@map("cours")
+}
+
+model Document {
+  id          Int        @id @default(autoincrement())
+  dname       String     @db.VarChar(60)
+  asID        Int        @map("asID")
+  studentID   String     @db.VarChar(30) @map("studentID")
+  Assignment  Assignment @relation(fields: [asID], references: [aid])
+  Student     Student    @relation(fields: [studentID], references: [regNo])
+
+  @@map("document")
+}
+
+model Take {
+  code Int     @id @default(autoincrement())
+  cid  Int
+  sid  String  @db.VarChar(30)
+  Student Student @relation(fields: [sid], references: [regNo])
+  Course  Course  @relation(fields: [cid], references: [cid])
+
+  @@map("takes")
+}

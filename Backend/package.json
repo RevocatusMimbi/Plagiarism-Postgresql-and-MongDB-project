@@ -1,0 +1,48 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "The backend for the Plagiarism application",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "lint": "eslint \"**/*.js\"",
+    "lint:fix": "eslint \"**/*.js\" --fix",
+    "format": "prettier --write \"**/*.js\"",
+    "start ": "npm start server.js",
+    "dev": "nodemon server.js",
+    "test": "jest",
+    "seed": "npx prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node --esm ./prisma/seed.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/RevocatusMimbi/Plagiarism-Postgresql-and-MongDB-project.git"
+  },
+  "author": "Revocatus Mimbi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RevocatusMimbi/Plagiarism-Postgresql-and-MongDB-project/issues"
+  },
+  "homepage": "https://github.com/RevocatusMimbi/Plagiarism-Postgresql-and-MongDB-project#readme",
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@types/express": "^5.0.5",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "prisma": "^6.19.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
