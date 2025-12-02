@@ -1,12 +1,11 @@
+// controllers/authController.js
+
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+// Utility functions for JWT and token response
+import { generateToken, sendTokenResponse } from '../utils/jwt.js'; 
 
 const prisma = new PrismaClient();
-
-// IMPORTANT: Replace 'YOUR_SECRET_KEY' with a strong, complex secret key
-// and ideally load it from a .env file (e.g., process.env.JWT_SECRET)
-const JWT_SECRET = process.env.JWT_SECRET;
 
 // --- Helper function to find the user based on email or registration number ---
 async function findUserByCredentials(identifier, password) {
@@ -41,72 +40,56 @@ async function findUserByCredentials(identifier, password) {
 /**
  * Handles login for Admin, Lecture, and Student
  */
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   const { identifier, password } = req.body;
-
-  if (!identifier || !password) {
-    return res
-      .status(400)
-      .json({ message: 'Identifier (Email/RegNo) and password are required.' });
-  }
 
   try {
     const result = await findUserByCredentials(identifier, password);
 
     if (!result) {
-      return res
-        .status(401)
-        .json({ message: 'Invalid credentials please try again.' });
+      // 401 Unauthorized error passed to central handler
+      const err = new Error('Invalid credentials please try again.');
+      err.statusCode = 401;
+      return next(err);
     }
 
     const { user, role } = result;
 
-    // Payload for the JWT token
-    const token = jwt.sign(
-      {
-        id: user.uid || user.lid || user.regNo,
-        email: user.email,
-        role: role, // 'Admin', 'Lecture', or 'Student'
-        level: user.level,
-      },
-      JWT_SECRET,
-      { expiresIn: '1d' },
-    );
-
-    // Send token and user details (excluding password)
-    const { password: _, ...userData } = user;
-
-    return res.status(200).json({
-      token,
-      user: { ...userData, role },
-      message: `${role} logged in successfully.`,
+    // 1. Generate token using utility
+    const token = generateToken({
+      id: user.uid || user.lid || user.regNo,
+      email: user.email,
+      role: role,
+      level: user.level,
     });
+
+    // 2. Send token as cookie using utility
+    return sendTokenResponse(
+      res,
+      token,
+      user,
+      role,
+      `${role} logged in successfully.`
+    );
   } catch (error) {
-    console.error('Login error:', error);
-    return res
-      .status(500)
-      .json({ message: 'Internal server error during login.' });
+    // Pass any unexpected errors (e.g., DB connection issues) to the error handler
+    next(error);
   }
 };
 
 /**
  * Handles registration for all user types, differentiated by a 'role' field
  */
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
+  // NOTE: Basic validation of required fields is now handled by Joi middleware.
   const { role, password, email, fname, lname, regNo, level, image } = req.body;
-
-  if (!role || !password || !email) {
-    return res
-      .status(400)
-      .json({ message: 'Role, password, and email are required fields.' });
-  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     let newUser;
     let createData = {
       password: hashedPassword,
-      level: level || (role === 'Student' ? 3 : 2), // Default levels based on schema data
+      level: level || (role === 'Student' ? 3 : 2), // Default levels
       image: image || 'avatar.png',
     };
 
@@ -120,22 +103,29 @@ export const registerUser = async (req, res) => {
       newUser = await prisma.lecture.create({ data: createData });
     } else if (role === 'Student') {
       // Student: Requires regNo (PK), fname, lname, password, image, status, level
-      if (!regNo)
-        return res.status(400).json({
-          message: 'Registration number (regNo) is required for Students.',
-        });
-
+      
+      // Validation Check (redundant safety check, Joi handles primary validation)
+      if (!regNo) { 
+        const err = new Error('Registration number (regNo) is required for Students.');
+        err.statusCode = 400;
+        return next(err);
+      } 
+      
+      // Corrected structure for createData for Student
       createData = {
         ...createData,
         regNo,
         fname,
         lname,
-        email: `${regNo}@student.com`,
+        email: `${regNo}@student.com`, // Auto-generate student email
         status: 1,
       };
       newUser = await prisma.student.create({ data: createData });
     } else {
-      return res.status(400).json({ message: 'Invalid user role specified.' });
+      // Invalid Role
+      const err = new Error('Invalid user role specified.');
+      err.statusCode = 400;
+      return next(err);
     }
 
     // Omit password from the response
@@ -144,15 +134,8 @@ export const registerUser = async (req, res) => {
       .status(201)
       .json({ message: `${role} registered successfully.`, user: userData });
   } catch (error) {
-    if (error.code === 'P2002') {
-      // Prisma unique constraint violation
-      return res
-        .status(409)
-        .json({ message: 'User with this email or ID already exists.' });
-    }
-    console.error('Registration error:', error);
-    return res
-      .status(500)
-      .json({ message: 'Internal server error during registration.' });
+    // PASS ALL CATCHED ERRORS TO THE CENTRAL HANDLER
+    // This allows errorHandler.js to handle P2002 (409 Conflict) and 500 errors.
+    next(error); 
   }
 };
