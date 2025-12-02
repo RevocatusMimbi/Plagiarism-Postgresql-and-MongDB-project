@@ -1,5 +1,3 @@
-// src/pages/LoginPage.tsx
-
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';   //  React Query for handling async mutations
 import { api } from '../lib/axios';                   //  Axios instance for API calls
@@ -41,13 +39,10 @@ export function LoginPage() {
       return response.data;
     },
     onSuccess: (data) => {
-      // 1. Store JWT token securely
-      localStorage.setItem('auth_token', data.token);
-
-      // 2. Show success message
+      // 1. Show success message
       setStatusMessage({ type: 'success', text: data.message });
 
-      // 3. Redirect user based on role
+      // 2. Redirect user based on role
       const role = data.user.role;
       let redirectPath = '/';
       if (role === 'Student') redirectPath = '/student/home';
@@ -88,9 +83,8 @@ export function LoginPage() {
     <div
       className="flex items-center justify-center min-h-screen"
       style={{
-        backgroundImage: `url('../../public/images/bg-3.jpg')`,
-        backgroundSize: 'cover',
-        background: 'linear-gradient(45deg, rgba(42, 97, 116, 0.851), rgba(177, 216, 230,0.811))',
+        backgroundImage: `linear-gradient(45deg, rgba(42, 97, 116, 0.851), rgba(177, 216, 230,0.811)), url('/images/bg-3.jpg')`,
+        backgroundSize: 'cover',  
       }}
     >
       <Card className="w-full max-w-md shadow-2xl bg-white/90">
