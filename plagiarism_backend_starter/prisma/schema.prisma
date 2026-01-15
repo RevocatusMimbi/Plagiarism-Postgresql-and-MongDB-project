@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/*
+Prisma schema adapted from uploaded PHP project's SQL.
+Simplified relations for a starter project.
+*/
+
+model Admin {
+  uid      Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  password String
+  image    String?
+  level    Int?
+}
+
+model Lecture {
+  lid      Int     @id @default(autoincrement())
+  fname    String
+  lname    String
+  email    String  @unique
+  password String
+  status   Int?
+  level    Int?
+  image    String?
+  cId      Int?
+}
+
+model Course {
+  id      Int     @id @default(autoincrement())
+  code    String
+  title   String?
+  level   Int?
+}
+
+model Student {
+  id        Int     @id @default(autoincrement())
+  regno     String  @unique
+  fname     String
+  lname     String
+  email     String?
+  level     Int?
+  submissions Submission[]
+}
+
+model Assignment {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String?
+  courseId    Int?
+  dueDate     DateTime?
+}
+
+model Submission {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  assignmentId Int?
+  filename   String?
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  student    Student  @relation(fields: [studentId], references: [id])
+}
+
+model Takes {
+  id   Int @id @default(autoincrement())
+  code Int
+  cid  Int
+  sid  String
+}
