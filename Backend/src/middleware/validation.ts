@@ -3,24 +3,35 @@ import { isValidEmail, isValidRegNo, errorResponse } from '../utils/helpers.js';
 
 /**
  * Validate login request
+ * Accepts either 'username' or 'identifier' field
  */
 export const validateLogin = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const { username, password } = req.body;
+  // Accept both 'username' and 'identifier' from frontend
+  const { username, identifier, password } = req.body;
 
-  if (!username || !password) {
+  const loginId = username || identifier;
+
+  if (!loginId || !password) {
     return res
       .status(400)
-      .json(errorResponse('Username and password are required'));
+      .json(
+        errorResponse('Username/Registration number and password are required'),
+      );
   }
 
   if (password.length < 6) {
     return res
       .status(400)
       .json(errorResponse('Password must be at least 6 characters'));
+  }
+
+  // Normalize to 'username' for auth service
+  if (identifier && !username) {
+    req.body.username = identifier;
   }
 
   next();
