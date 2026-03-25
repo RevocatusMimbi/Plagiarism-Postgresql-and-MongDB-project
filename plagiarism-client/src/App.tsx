@@ -79,6 +79,7 @@ function AppRoutes() {
       <Route path="/faculty" element={<ProtectedRoute allowedRoles={["admin"]}><RegisteredFaculties /></ProtectedRoute>} />
       <Route path="/similarity" element={<ProtectedRoute allowedRoles={["admin"]}><Similarity /></ProtectedRoute>} />
       <Route path="/similarity/results" element={<ProtectedRoute allowedRoles={["admin"]}><SimilarityResults /></ProtectedRoute>} />
+      <Route path="/similarity/matrix" element={<ProtectedRoute allowedRoles={["admin"]}><SimilarityResults /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin"]}><Reports /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute allowedRoles={["admin"]}><Settings /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["admin"]}><Profile /></ProtectedRoute>} />

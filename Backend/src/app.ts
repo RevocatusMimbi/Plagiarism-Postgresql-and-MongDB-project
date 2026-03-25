@@ -3,6 +3,7 @@ import type { Application } from 'express';
 import cors from 'cors';
 import config from './config/env.js';
 import authRoutes from './routes/authRoute.js';
+import dashboardRoutes from './routes/dashboardRoute.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 /**
@@ -53,6 +54,7 @@ const createApp = (): Application => {
 
   // API Routes
   app.use('/api/auth', authRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
 
   // ========================
   // Error Handling
